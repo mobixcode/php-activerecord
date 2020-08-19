@@ -89,6 +89,20 @@ abstract class Connection
 	static $DEFAULT_PORT = 0;
 
 	/**
+	 * use ci pdo to replace activerecord
+	 */
+	public static function ci_instance(PDO $ci_pdo)
+	{
+		try {
+			$fqclass = static::load_adapter_class('mysql');
+			$connection = new $fqclass([], $ci_pdo);
+		} catch (PDOException $e) {
+			throw new DatabaseException($e);
+		}
+		return $connection;
+	}
+
+	/**
 	 * Retrieve a database connection.
 	 *
 	 * @param string $connection_string_or_connection_name A database connection string (ex. mysql://user:pass@host[:port]/dbname)
@@ -243,10 +257,15 @@ abstract class Connection
 	 * @param array $info Array containing URL parts
 	 * @return Connection
 	 */
-	protected function __construct($info)
+	protected function __construct($info, PDO $ci_pdo = null)
 	{
 		try {
 			// unix sockets start with a /
+			if ($ci_pdo) {
+				$this->connection = $ci_pdo;
+				return;
+			}
+
 			if ($info->host[0] != '/')
 			{
 				$host = "host=$info->host";

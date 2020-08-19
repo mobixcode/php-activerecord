@@ -18,6 +18,17 @@ class ConnectionManager extends Singleton
 	static private $connections = array();
 
 	/**
+	 * set codeigniter pdo driver to php activerecord
+	 */
+	public static function set_ci_connection($name, \PDO $ci_pdo, $force = false)
+	{
+		if ($force || !isset(self::$connections[$name]) || !self::$connections[$name]->connection) {
+			self::$connections[$name] = Connection::ci_instance($ci_pdo);
+		}
+		return self::$connections[$name];
+	}
+
+	/**
 	 * If $name is null then the default connection will be returned.
 	 *
 	 * @see Config
