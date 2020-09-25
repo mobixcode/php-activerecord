@@ -95,7 +95,7 @@ abstract class Connection
 	{
 		try {
 			$fqclass = static::load_adapter_class('mysql');
-			$connection = new $fqclass([], $ci_pdo);
+			$connection = new $fqclass([], [], $ci_pdo);
 		} catch (PDOException $e) {
 			throw new DatabaseException($e);
 		}
@@ -257,7 +257,7 @@ abstract class Connection
 	 * @param array $info Array containing URL parts
 	 * @return Connection
 	 */
-	protected function __construct($info, PDO $ci_pdo = null)
+	protected function __construct($info, $pdo_options = [], PDO $ci_pdo = null)
 	{
 		try {
 			// unix sockets start with a /
@@ -276,7 +276,15 @@ abstract class Connection
 			else
 				$host = "unix_socket=$info->host";
 
-			$this->connection = new PDO("$info->protocol:$host;dbname=$info->db", $info->user, $info->pass, static::$PDO_OPTIONS);
+			$this->connection = new PDO(
+				"$info->protocol:$host;dbname=$info->db",
+				$info->user,
+				$info->pass,
+				array_merge(
+					static::$PDO_OPTIONS,
+					$pdo_options
+				)
+			);
 		} catch (PDOException $e) {
 			throw new DatabaseException($e);
 		}
