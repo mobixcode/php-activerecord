@@ -113,7 +113,7 @@ abstract class Connection
 	 * @return Connection
 	 * @see parse_connection_url
 	 */
-	public static function instance($connection_string_or_connection_name=null)
+	public static function instance($connection_string_or_connection_name = null, $pdo_options = [])
 	{
 		$config = Config::instance();
 
@@ -133,7 +133,7 @@ abstract class Connection
 		$fqclass = static::load_adapter_class($info->protocol);
 
 		try {
-			$connection = new $fqclass($info);
+			$connection = new $fqclass($info, $pdo_options);
 			$connection->protocol = $info->protocol;
 			$connection->logging = $config->get_logging();
 			$connection->logger = $connection->logging ? $config->get_logger() : null;
