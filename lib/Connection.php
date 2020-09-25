@@ -113,15 +113,20 @@ abstract class Connection
 	 * @return Connection
 	 * @see parse_connection_url
 	 */
-	public static function instance($connection_string_or_connection_name = null, $pdo_options = [])
+	public static function instance($connection_string_or_connection_name = null)
 	{
 		$config = Config::instance();
+		$pdo_option = [];
 
 		if (strpos($connection_string_or_connection_name, '://') === false)
 		{
 			$connection_string = $connection_string_or_connection_name ?
 				$config->get_connection($connection_string_or_connection_name) :
 				$config->get_default_connection_string();
+
+			if ($connection_string_or_connection_name) {
+				$pdo_option = $config->get_pdo_option($connection_string_or_connection_name);
+			}
 		}
 		else
 			$connection_string = $connection_string_or_connection_name;
@@ -133,7 +138,7 @@ abstract class Connection
 		$fqclass = static::load_adapter_class($info->protocol);
 
 		try {
-			$connection = new $fqclass($info, $pdo_options);
+			$connection = new $fqclass($info, $pdo_option);
 			$connection->protocol = $info->protocol;
 			$connection->logging = $config->get_logging();
 			$connection->logger = $connection->logging ? $config->get_logger() : null;
