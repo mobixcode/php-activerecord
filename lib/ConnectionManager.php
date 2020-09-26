@@ -41,7 +41,10 @@ class ConnectionManager extends Singleton
 		$name = $name ? $name : $config->get_default_connection();
 
 		if (!isset(self::$connections[$name]) || !self::$connections[$name]->connection)
-			self::$connections[$name] = Connection::instance($config->get_connection($name));
+			self::$connections[$name] = Connection::instance(
+				$config->get_connection($name),
+				$config->get_pdo_option($name)
+			);
 
 		return self::$connections[$name];
 	}
