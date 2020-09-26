@@ -89,6 +89,20 @@ abstract class Connection
 	static $DEFAULT_PORT = 0;
 
 	/**
+	 * use ci pdo to replace activerecord
+	 */
+	public static function ci_instance(PDO $ci_pdo)
+	{
+		try {
+			$fqclass = static::load_adapter_class('mysql');
+			$connection = new $fqclass([], [], $ci_pdo);
+		} catch (PDOException $e) {
+			throw new DatabaseException($e);
+		}
+		return $connection;
+	}
+
+	/**
 	 * Retrieve a database connection.
 	 *
 	 * @param string $connection_string_or_connection_name A database connection string (ex. mysql://user:pass@host[:port]/dbname)
@@ -99,7 +113,7 @@ abstract class Connection
 	 * @return Connection
 	 * @see parse_connection_url
 	 */
-	public static function instance($connection_string_or_connection_name=null)
+	public static function instance($connection_string_or_connection_name = null, $pdo_option = [])
 	{
 		$config = Config::instance();
 
@@ -119,7 +133,7 @@ abstract class Connection
 		$fqclass = static::load_adapter_class($info->protocol);
 
 		try {
-			$connection = new $fqclass($info);
+			$connection = new $fqclass($info, $pdo_option);
 			$connection->protocol = $info->protocol;
 			$connection->logging = $config->get_logging();
 			$connection->logger = $connection->logging ? $config->get_logger() : null;
@@ -243,10 +257,15 @@ abstract class Connection
 	 * @param array $info Array containing URL parts
 	 * @return Connection
 	 */
-	protected function __construct($info)
+	protected function __construct($info, $pdo_options = [], PDO $ci_pdo = null)
 	{
 		try {
 			// unix sockets start with a /
+			if ($ci_pdo) {
+				$this->connection = $ci_pdo;
+				return;
+			}
+
 			if ($info->host[0] != '/')
 			{
 				$host = "host=$info->host";
@@ -257,7 +276,12 @@ abstract class Connection
 			else
 				$host = "unix_socket=$info->host";
 
-			$this->connection = new PDO("$info->protocol:$host;dbname=$info->db", $info->user, $info->pass, static::$PDO_OPTIONS);
+			$this->connection = new PDO(
+				"$info->protocol:$host;dbname=$info->db",
+				$info->user,
+				$info->pass,
+				array_replace(static::$PDO_OPTIONS, $pdo_options)
+			);
 		} catch (PDOException $e) {
 			throw new DatabaseException($e);
 		}

@@ -50,6 +50,9 @@ class Config extends Singleton
 	 */
 	private $connections = array();
 
+
+	private $pdo_options = [];
+
 	/**
 	 * Directory for the auto_loading of model classes.
 	 *
@@ -139,6 +142,27 @@ class Config extends Singleton
 			$this->set_default_connection($default_connection);
 
 		$this->connections = $connections;
+	}
+
+	public function set_pdo_options($pdo_options)
+	{
+		if (!is_array($pdo_options))
+			throw new ConfigException("PDO Options must be an array");
+
+		$this->pdo_options = $pdo_options;
+	}
+
+	public function get_pdo_options()
+	{
+		return $this->pdo_options;
+	}
+
+	public function get_pdo_option($name)
+	{
+		if (array_key_exists($name, $this->pdo_options))
+			return $this->pdo_options[$name];
+
+		return [];
 	}
 
 	/**
