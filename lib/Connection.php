@@ -280,10 +280,7 @@ abstract class Connection
 				"$info->protocol:$host;dbname=$info->db",
 				$info->user,
 				$info->pass,
-				array_merge(
-					static::$PDO_OPTIONS,
-					$pdo_options
-				)
+				array_replace(static::$PDO_OPTIONS, $pdo_options)
 			);
 		} catch (PDOException $e) {
 			throw new DatabaseException($e);
