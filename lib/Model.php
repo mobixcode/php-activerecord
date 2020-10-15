@@ -355,7 +355,25 @@ class Model
 	 */
 	public function __isset($attribute_name)
 	{
-		return array_key_exists($attribute_name,$this->attributes) || array_key_exists($attribute_name,static::$alias_attribute);
+		if (array_key_exists($attribute_name, $this->attributes) ||
+			array_key_exists($attribute_name, static::$alias_attribute)
+		) {
+			return true;
+		}
+		
+		/* 從這邊之後是新增，先檢查是不是已經 load 過了，沒有就去找 relationship */
+		if (array_key_exists($attribute_name, $this->__relationships)) {
+			return true;
+		}
+
+		$table = static::table();
+		$relationship = $table->get_relationship($attribute_name); // 有沒有定義 table relation 關係
+		if ($relationship) {
+			$this->__relationships[$attribute_name] = $relationship->load($this); // 真正去 query
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
